@@ -1,5 +1,6 @@
 import React from 'react';
 import axios from 'axios';
+import EntityComponent from './EntityComponent'
 import { ToastProvider, useToasts } from 'react-toast-notifications';
 // const { addToast } = useToasts();
 import Notifications, {notify} from 'react-notify-toast';
@@ -37,6 +38,7 @@ export default class MainFormComponent extends React.Component {
   render() {
     return (
       <form>
+      {/*
         <div className="form-group">
           <label htmlFor="exampleFormControlTextarea1">Configuration JSON</label>
           <textarea className="form-control"
@@ -48,6 +50,9 @@ export default class MainFormComponent extends React.Component {
         </div>
         <button type="button" className="btn btn-primary" onClick={(e) => this.handleSubmitClick(e)}>Submit</button>
         <Notifications />
+        */}
+        <EntityComponent></EntityComponent>
+
       </form>
     );
   }
