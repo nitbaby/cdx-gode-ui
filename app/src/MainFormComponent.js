@@ -16,7 +16,8 @@ export default class MainFormComponent extends React.Component {
   }
 
   getEmptyEntity(){
-    const entityItemRow = { name: '',
+    const entityItemRow = {
+      name: '',
       description: '',
       datatype: 'String',
       properties: {
@@ -25,7 +26,11 @@ export default class MainFormComponent extends React.Component {
         primaryKey: false
       }
     };
-    return([entityItemRow]);
+    return({
+      name: '',
+      version: '1.0',
+      entityItems: [entityItemRow]
+    });
 };
   handleSubmitClick() {
 
@@ -48,9 +53,10 @@ export default class MainFormComponent extends React.Component {
 
   transformEntityForPost(state) {
     const {entities} = this.state;
+    debugger;
     const entitiesToPost = entities.map((entity) => {
-      const primaryKeyItem = entity.filter((item) => item.properties.primaryKey)[0];
-      const nonPrimaryKeyItems = entity.filter((item) => !item.properties.primaryKey);
+      const primaryKeyItem = entity.entityItems.filter((item) => item.properties.primaryKey)[0];
+      const nonPrimaryKeyItems = entity.entityItems.filter((item) => !item.properties.primaryKey);
       const attributes = nonPrimaryKeyItems.map((item) => {
         const properties = [];
         if (item.properties.index) {
@@ -76,7 +82,9 @@ export default class MainFormComponent extends React.Component {
       }
       return ({
         attributes,
-        idField
+        idField,
+        name: entity.name,
+        version: entity.version
       })
     })
 

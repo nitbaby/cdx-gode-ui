@@ -4,33 +4,50 @@ export default class EntityComponent extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      entityItems: this.props.entity,
+      // name: 'sample',
+      // version: '1.0',
+      entity: this.props.entity,
       id: this.props.id,
       isEditing: true
     };
   }
-  
+
   handleAddEntityItemClick() {
-    console.log('this is:', this.state.jsonValue);
-    const entityItems = this.state.entityItems;
-    this.setState({
-      entityItems: [
-        ...entityItems,
-        { name: '',
-          description: '',
-          datatype: 'String',
-          properties: {
-            index: false,
-            unique: false,
-            primaryKey: false
-          }
+    const entityItems = this.state.entity.entityItems;
+    const updatedEntityItems = [
+      ...entityItems,
+      { name: '',
+        description: '',
+        datatype: 'String',
+        properties: {
+          index: false,
+          unique: false,
+          primaryKey: false
         }
-      ]
-    })
+      }
+    ];
+
+    this.setState({
+      entity: Object.assign({}, this.state.entity, {
+        entityItems: updatedEntityItems
+      })
+    });
   }
 
+  handleEntityNameChange(event) {
+    this.setState({
+      entity: Object.assign({}, this.state.entity, {name: event.target.value})
+    });
+    // this.setState({name: event.target.value});
+  }
+  handleEntityVersionChange(event) {
+    this.setState({
+      entity: Object.assign({}, this.state.entity, {version: event.target.value})
+    });
+    // this.setState({version: event.target.value});
+  }
   handleEntityItemChange(event, i, field) {
-    const entityItems = this.state.entityItems;
+    const entityItems = this.state.entity.entityItems;
     const item = entityItems[i];
     let updatedItem;
     if (field === 'name') {
@@ -60,8 +77,8 @@ export default class EntityComponent extends React.Component {
       }
     })
     this.setState({
-      entityItems: updatedEntityList
-    })
+      entity: Object.assign({}, this.state.entity, {entityItems: updatedEntityList})
+    });
   }
   handleEditEntityClick(e) {
     this.setState({
@@ -70,7 +87,7 @@ export default class EntityComponent extends React.Component {
   }
 
   handleAddEntitySaveClick(e) {
-    const entityItems = this.state.entityItems;
+    const entityItems = this.state.entity;
     this.setState({
       isEditing: false
     });
@@ -78,7 +95,7 @@ export default class EntityComponent extends React.Component {
   }
 
   render() {
-    const {entityItems, isEditing, id} = this.state;
+    const {entity, isEditing, id} = this.state;
     let editSaveButton;
     if (isEditing) {
       editSaveButton = <button
@@ -95,7 +112,7 @@ export default class EntityComponent extends React.Component {
                         Edit entity
                       </button>
     }
-    const tableRows = entityItems.map((item, idx) => {
+    const tableRows = entity.entityItems.map((item, idx) => {
         return (
           <tr key={idx}>
             <th scope="row">
@@ -139,6 +156,26 @@ export default class EntityComponent extends React.Component {
 
     return (
       <div>
+        <div className="row">
+          <div className="col-6">
+            <div className="form-group">
+              <label htmlFor="appName">Entity name</label>
+              <input className="form-control"
+                id="appName"
+                value={entity.name}
+                onChange={(e) => this.handleEntityNameChange(e)}/>
+            </div>
+          </div>
+          <div className="col-6">
+            <div className="form-group">
+              <label htmlFor="appName">Entity version</label>
+              <input className="form-control"
+                id="appName"
+                value={entity.version}
+                onChange={(e) => this.handleEntityVersionChange(e)}/>
+            </div>
+          </div>
+        </div>
         <table className="table table-dark">
           <thead>
             <tr>
