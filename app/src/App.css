@@ -28,6 +28,10 @@
   color: #61dafb;
 }
 
+.inilne-blk {
+  display: inline-block;
+}
+
 body{
   /* background-color: #282c34;
   color: #fff; */

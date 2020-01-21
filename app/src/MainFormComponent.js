@@ -8,17 +8,32 @@ export default class MainFormComponent extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = {jsonValue: ''};
+    this.state = {
+      name: 'Demo app',
+      entities: [this.getEmptyEntity()],
+      version: '1.0'
+      };
   }
 
+  getEmptyEntity(){
+    const entityItemRow = { name: '',
+      description: '',
+      datatype: 'String',
+      properties: {
+        index: false,
+        unique: false,
+        primaryKey: false
+      }
+    };
+    return([entityItemRow]);
+};
   handleSubmitClick() {
 
-    console.log('this is:', this.state.jsonValue);
-    const jsonValueToPost = this.state.jsonValue.trim().replace(/(\r\n|\n|\r)/gm, "");
-    console.log('this is:', jsonValueToPost);
-    axios.post('/user', {
-      config: jsonValueToPost
-    })
+    console.log('this is:', this.state);
+    const body = this.transformEntityForPost(this.state);
+    // const jsonValueToPost = this.state.jsonValue.trim().replace(/(\r\n|\n|\r)/gm, "");
+    console.log('body is:', body);
+    axios.post('/user', body)
     .then(function (response) {
       const successColor = { background: '#00B300', text: "#FFFFFF" };
       notify.show('Saved Successfully!', 'custom', 2000, successColor);
@@ -31,29 +46,99 @@ export default class MainFormComponent extends React.Component {
     });
   }
 
-  handleJSONValueChange(event) {
-    this.setState({jsonValue: event.target.value});
+  transformEntityForPost(state) {
+    const {entities} = this.state;
+    const entitiesToPost = entities.map((entity) => {
+      const primaryKeyItem = entity.filter((item) => item.properties.primaryKey)[0];
+      const nonPrimaryKeyItems = entity.filter((item) => !item.properties.primaryKey);
+      const attributes = nonPrimaryKeyItems.map((item) => {
+        const properties = [];
+        if (item.properties.index) {
+          properties.push('INDEX')
+        }
+        if (item.properties.unique) {
+          properties.push('UNIQUE')
+        }
+        return ({
+          datatype: item.datatype,
+          description: item.description,
+          name: item.name,
+          properties
+        });
+      });
+      let idField;
+      if (primaryKeyItem) {
+        idField = {
+          datatype: primaryKeyItem.datatype,
+          description: primaryKeyItem.description,
+          name: primaryKeyItem.name
+        };
+      }
+      return ({
+        attributes,
+        idField
+      })
+    })
+
+    const postBody = {
+      name: state.name,
+      version: state.version,
+      entities: entitiesToPost
+    }
+    return postBody;
+  }
+
+  handleAppNameChange(event) {
+    this.setState({name: event.target.value});
+  }
+  handleVersionChange(event) {
+    this.setState({version: event.target.value});
+  }
+  handleAddEntityClick(event) {
+    this.setState({entities: [...this.state.entities, this.getEmptyEntity()]});
+  }
+  handleSaveSingleEntity(entity, index) {
+    console.log(entity, index);
+    const entities = this.state.entities;
+    const entitiesUpdated = entities.map((item, idx) => ((index === idx) ? entity : item));
+    this.setState({entities: entitiesUpdated});
   }
 
   render() {
+    const {entities} = this.state;
+    console.log('entities', entities);
+    const entityComponents = entities.map((entity, index) => (
+      <EntityComponent
+        key={index}
+        entity={entity}
+        id={index}
+        saveSingleEntity={(entityToSave) => {this.handleSaveSingleEntity(entityToSave, index)}}/>
+    ))
     return (
       <form>
-      {/*
         <div className="form-group">
-          <label htmlFor="exampleFormControlTextarea1">Configuration JSON</label>
-          <textarea className="form-control"
-            id="exampleFormControlTextarea1"
-            rows="10"
-            value={this.state.jsonValue}
-            onChange={(e) => this.handleJSONValueChange(e)}>
-          </textarea>
+          <label htmlFor="appName"><h4>App Name</h4></label>
+          <input className="form-control"
+            id="appName"
+            value={this.state.name}
+            onChange={(e) => this.handleAppNameChange(e)}/>
+        </div>
+        <h4>Entities</h4>
+        {entityComponents}
+        <button type="button" className="btn btn-dark" onClick={(e) => this.handleAddEntityClick(e)}>Add Entity</button>
+        <hr/>
+        <div className="form-group">
+          <label htmlFor="version"><h4>Version</h4></label>
+          <input className="form-control"
+            id="version"
+            value={this.state.version}
+            onChange={(e) => this.handleVersionChange(e)}/>
         </div>
         <button type="button" className="btn btn-primary" onClick={(e) => this.handleSubmitClick(e)}>Submit</button>
         <Notifications />
-        */}
-        <EntityComponent></EntityComponent>
-
       </form>
+
+
     );
   }
 }
