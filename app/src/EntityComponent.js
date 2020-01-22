@@ -4,8 +4,6 @@ export default class EntityComponent extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      // name: 'sample',
-      // version: '1.0',
       entity: this.props.entity,
       id: this.props.id,
       isEditing: true
@@ -38,13 +36,16 @@ export default class EntityComponent extends React.Component {
     this.setState({
       entity: Object.assign({}, this.state.entity, {name: event.target.value})
     });
-    // this.setState({name: event.target.value});
   }
   handleEntityVersionChange(event) {
     this.setState({
       entity: Object.assign({}, this.state.entity, {version: event.target.value})
     });
-    // this.setState({version: event.target.value});
+  }
+  handleEntityTagsChange(event) {
+    this.setState({
+      entity: Object.assign({}, this.state.entity, {tags: event.target.value})
+    });
   }
   handleEntityItemChange(event, i, field) {
     const entityItems = this.state.entity.entityItems;
@@ -124,8 +125,10 @@ export default class EntityComponent extends React.Component {
               onChange={(e) => this.handleEntityItemChange(e, idx, 'datatype')}
               value={item.datatype}>
               <option value="String">String</option>
-              <option value="Number">Number</option>
+              <option value="Long">Long</option>
               <option value="Boolean">Boolean</option>
+              <option value="BigDecimal">BigDecimal</option>
+              <option value="BigInteger">BigInteger</option>
             </select>
             </td>
             <td>
@@ -154,6 +157,17 @@ export default class EntityComponent extends React.Component {
         )
     });
 
+    const tagsBadges = entity.tags.split(',').map((tag, index) => (
+      <span className="badge badge-pill badge-dark p-2 mr-2" key={index}>{tag}</span>
+    ));
+
+    let tagsToDisplay;
+    if (isEditing) {
+      tagsToDisplay = <input className="form-control" id="tags"
+        value={entity.tags} onChange={(e) => this.handleEntityTagsChange(e)}/>
+    } else {
+      tagsToDisplay = <div>{tagsBadges}</div>;
+    }
     return (
       <div>
         <div className="row">
@@ -176,8 +190,8 @@ export default class EntityComponent extends React.Component {
             </div>
           </div>
         </div>
-        <table className="table table-dark">
-          <thead>
+        <table className="table table-bordered table-hover">
+          <thead className="thead-dark">
             <tr>
               <th scope="col">Name</th>
               <th scope="col">Datatype</th>
@@ -189,6 +203,10 @@ export default class EntityComponent extends React.Component {
             {tableRows}
           </tbody>
         </table>
+        <div className="form-group">
+          <label>Tags</label>
+          {tagsToDisplay}
+        </div>
         <button type="button" className="btn btn-secondary float-right" onClick={(e) => this.handleAddEntityItemClick(e)}>Add new row</button>
         {editSaveButton}
         <hr/>

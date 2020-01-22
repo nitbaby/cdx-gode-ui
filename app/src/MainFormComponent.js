@@ -1,59 +1,91 @@
 import React from 'react';
 import axios from 'axios';
 import EntityComponent from './EntityComponent'
-import { ToastProvider, useToasts } from 'react-toast-notifications';
-// const { addToast } = useToasts();
 import Notifications, {notify} from 'react-notify-toast';
+import $ from 'jquery';
 export default class MainFormComponent extends React.Component {
 
   constructor(props) {
     super(props);
     this.state = {
-      name: 'Demo app',
+      name: 'DemoApp12',
       entities: [this.getEmptyEntity()],
-      version: '1.0'
-      };
+      version: '1.0',
+      port: '8090',
+      store: {
+        name: "wynss_dev_r22",
+        password: "dev-user",
+        type: "MYSQL",
+        username: "dev-user"
+      },
+    };
   }
 
   getEmptyEntity(){
     const entityItemRow = {
-      name: '',
-      description: '',
+      name: 'StudentId',
+      description: 'Student roll number',
       datatype: 'String',
       properties: {
         index: false,
         unique: false,
-        primaryKey: false
+        primaryKey: true
       }
     };
     return({
-      name: '',
+      name: 'Student',
       version: '1.0',
+      tags: 'Best Performer, Least Performer',
       entityItems: [entityItemRow]
     });
 };
   handleSubmitClick() {
-
-    console.log('this is:', this.state);
+    const postUrl = 'http://localhost:8005/generator/build';
     const body = this.transformEntityForPost(this.state);
-    // const jsonValueToPost = this.state.jsonValue.trim().replace(/(\r\n|\n|\r)/gm, "");
-    console.log('body is:', body);
-    axios.post('/user', body)
+    axios.post(postUrl, body)
     .then(function (response) {
       const successColor = { background: '#00B300', text: "#FFFFFF" };
-      notify.show('Saved Successfully!', 'custom', 2000, successColor);
+      notify.show('Build completed successfully!', 'custom', 2000, successColor);
+      $('#collapseTwo').collapse('toggle');
       console.log(response);
     })
     .catch(function (error) {
       const errorColor = { background: '#aa1717', text: "#FFFFFF" };
-      notify.show('Sorry, an error occured while saving', 'custom', 2000, errorColor);
+      notify.show('Sorry, an error occured while building the app', 'custom', 2000, errorColor);
+      console.log(error);
+    });
+  }
+
+  handleDeployClick() {
+    const postUrl = 'http://localhost:8005/generator/deploy';
+    const {name, version, port, store} = this.state;
+    const body = {
+      appName: name,
+      version: version,
+      port: port,
+      store: {
+        name: store.name,
+        password: store.password,
+        type: store.type,
+        username: store.username
+      }
+    };
+    axios.post(postUrl, body)
+    .then(function (response) {
+      const successColor = { background: '#00B300', text: "#FFFFFF" };
+      notify.show('Deployment triggered successfully!', 'custom', 2000, successColor);
+      $('#collapseThree').collapse('toggle');
+      console.log(response);
+    })
+    .catch(function (error) {
+      const errorColor = { background: '#aa1717', text: "#FFFFFF" };
+      notify.show('Sorry, an error occured while deploy was triggered', 'custom', 2000, errorColor);
       console.log(error);
     });
   }
 
   transformEntityForPost(state) {
     const {entities} = this.state;
-    debugger;
     const entitiesToPost = entities.map((entity) => {
       const primaryKeyItem = entity.entityItems.filter((item) => item.properties.primaryKey)[0];
       const nonPrimaryKeyItems = entity.entityItems.filter((item) => !item.properties.primaryKey);
@@ -84,7 +116,8 @@ export default class MainFormComponent extends React.Component {
         attributes,
         idField,
         name: entity.name,
-        version: entity.version
+        version: entity.version,
+        tags: entity.tags.split(',').map((tag) => tag.trim())
       })
     })
 
@@ -102,19 +135,52 @@ export default class MainFormComponent extends React.Component {
   handleVersionChange(event) {
     this.setState({version: event.target.value});
   }
+  handleDeployParamChange(event, item) {
+    switch (item) {
+      case 'port':
+        this.setState({port: event.target.value});
+        break;
+      case 'storeName':
+        this.setState({store: Object.assign({}, this.state.store, {name: event.target.value})});
+        break;
+      case 'storePass':
+        this.setState({store: Object.assign({}, this.state.store, {password: event.target.value})});
+        break;
+      case 'storeType':
+        this.setState({store: Object.assign({}, this.state.store, {type: event.target.value})});
+        break;
+      case 'storeUsername':
+        this.setState({store: Object.assign({}, this.state.store, {username: event.target.value})});
+        break;
+      default:
+
+    }
+  }
   handleAddEntityClick(event) {
     this.setState({entities: [...this.state.entities, this.getEmptyEntity()]});
   }
+  handleLinkClick(linkType) {
+    switch (linkType) {
+      case 'portal':
+        window.open('http://localhost:8005/gode/applications', '_blank')
+        break;
+      case 'docs':
+        window.open('https://usefulangle.com', '_blank')
+        break;
+      default:
+
+    }
+
+  }
   handleSaveSingleEntity(entity, index) {
-    console.log(entity, index);
     const entities = this.state.entities;
     const entitiesUpdated = entities.map((item, idx) => ((index === idx) ? entity : item));
     this.setState({entities: entitiesUpdated});
   }
 
   render() {
-    const {entities} = this.state;
-    console.log('entities', entities);
+    const {name, version, port, store, entities} = this.state;
+
     const entityComponents = entities.map((entity, index) => (
       <EntityComponent
         key={index}
@@ -123,30 +189,110 @@ export default class MainFormComponent extends React.Component {
         saveSingleEntity={(entityToSave) => {this.handleSaveSingleEntity(entityToSave, index)}}/>
     ))
     return (
-      <form>
-        <div className="form-group">
-          <label htmlFor="appName"><h4>App Name</h4></label>
-          <input className="form-control"
-            id="appName"
-            value={this.state.name}
-            onChange={(e) => this.handleAppNameChange(e)}/>
-        </div>
-        <h4>Entities</h4>
-        {entityComponents}
-        <button type="button" className="btn btn-dark" onClick={(e) => this.handleAddEntityClick(e)}>Add Entity</button>
-        <hr/>
-        <div className="form-group">
-          <label htmlFor="version"><h4>Version</h4></label>
-          <input className="form-control"
-            id="version"
-            value={this.state.version}
-            onChange={(e) => this.handleVersionChange(e)}/>
-        </div>
-        <button type="button" className="btn btn-primary" onClick={(e) => this.handleSubmitClick(e)}>Submit</button>
-        <Notifications />
-      </form>
+      <div>
+      <Notifications />
+        <div id="accordion">
+            <div className="card">
+              <div className="card-header" id="headingOne">
+                <h5 className="mb-0">
+                  <button className="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    Build
+                  </button>
+                </h5>
+              </div>
 
+            <div id="collapseOne" className="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+              <div className="card-body">
+              <form>
+                <div className="form-group">
+                  <label htmlFor="appName"><h4>App Name</h4></label>
+                  <input className="form-control"
+                    id="appName"
+                    value={this.state.name}
+                    onChange={(e) => this.handleAppNameChange(e)}/>
+                </div>
+                <h4>Entities</h4>
+                {entityComponents}
+                <button type="button" className="btn btn-dark" onClick={(e) => this.handleAddEntityClick(e)}>Add Entity</button>
+                <hr/>
+                <div className="form-group">
+                  <label htmlFor="version"><h4>Version</h4></label>
+                  <input className="form-control"
+                    id="version"
+                    value={this.state.version}
+                    onChange={(e) => this.handleVersionChange(e)}/>
+                </div>
+                <button type="button" className="btn btn-primary" onClick={(e) => this.handleSubmitClick(e)}>Submit</button>
+              </form>
+              </div>
+            </div>
+          </div>
+          <div className="card">
+            <div className="card-header" id="headingTwo">
+              <h5 className="mb-0">
+                <button className="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                  Deploy
+                </button>
+              </h5>
+            </div>
+            <div id="collapseTwo" className="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+              <div className="card-body">
+                <div className="form-group">
+                  <label>Port number</label>
+                  <input className="form-control"
+                    value={port}
+                    onChange={(e) => this.handleDeployParamChange(e, 'port')}/>
+                </div>
+                <div className="form-group">
+                  <label>Store name</label>
+                  <input className="form-control"
+                    value={store.name}
+                    onChange={(e) => this.handleDeployParamChange(e, 'storeName')}/>
+                </div>
+                <div className="form-group">
+                  <label>Store type</label>
+                  <input className="form-control"
+                    value={store.type}
+                    onChange={(e) => this.handleDeployParamChange(e, 'storeType')}/>
+                </div>
+                <div className="form-group">
+                  <label>Store username</label>
+                  <input className="form-control"
+                    value={store.username}
+                    onChange={(e) => this.handleDeployParamChange(e, 'storeUsername')}/>
+                </div>
+                <div className="form-group">
+                  <label>Store password</label>
+                  <input className="form-control"
+                    value={store.password}
+                    onChange={(e) => this.handleDeployParamChange(e, 'storePass')}/>
+                </div>
+                <button type="button" className="btn btn-primary" onClick={(e) => this.handleDeployClick(e)}>Deploy</button>
+              </div>
+            </div>
+          </div>
+          <div className="card">
+            <div className="card-header" id="headingThree">
+              <h5 className="mb-0">
+                <button className="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                  API Doc & Admin Portal
+                </button>
+              </h5>
+            </div>
+            <div id="collapseThree" className="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+              <div className="card-body">
+                  <div>
+                    <button type="button" className="btn btn-primary"
+                      onClick={(e) => this.handleLinkClick('portal')}>Link to Admin Portal</button>
 
+                    <button type="button" className="btn btn-primary ml-5"
+                      onClick={(e) => this.handleLinkClick('docs')}>Link to API Docs</button>
+                  </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 }
