@@ -191,7 +191,7 @@ export default class EntityComponent extends React.Component {
           </div>
         </div>
         <table className="table table-bordered table-hover">
-          <thead className="thead-dark">
+          <thead className="thead-light">
             <tr>
               <th scope="col">Name</th>
               <th scope="col">Datatype</th>

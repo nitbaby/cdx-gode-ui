@@ -17,7 +17,7 @@ function App() {
           </header>
         </div>
       </div>
-        <div className="container-lg py-4 mt-4 bg-white border rounded">
+        <div className="container-lg py-4 my-3 bg-white border rounded">
           <MainFormComponent></MainFormComponent>
         </div>
       </div>
