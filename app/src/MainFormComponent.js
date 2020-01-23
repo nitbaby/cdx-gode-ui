@@ -18,6 +18,8 @@ export default class MainFormComponent extends React.Component {
         type: "MYSQL",
         username: "dev-user"
       },
+      processingBuild: false,
+      processingDeploy: false
     };
   }
 
@@ -40,6 +42,7 @@ export default class MainFormComponent extends React.Component {
     });
 };
   handleSubmitClick() {
+    this.setState({processingBuild: true});
     const postUrl = 'http://localhost:8005/generator/build';
     const body = this.transformEntityForPost(this.state);
     axios.post(postUrl, body)
@@ -53,10 +56,14 @@ export default class MainFormComponent extends React.Component {
       const errorColor = { background: '#aa1717', text: "#FFFFFF" };
       notify.show('Sorry, an error occured while building the app', 'custom', 2000, errorColor);
       console.log(error);
+    })
+    .finally(() => {
+      this.setState({processingBuild: false})
     });
   }
 
   handleDeployClick() {
+    this.setState({processingDeploy: true});
     const postUrl = 'http://localhost:8005/generator/deploy';
     const {name, version, port, store} = this.state;
     const body = {
@@ -81,7 +88,8 @@ export default class MainFormComponent extends React.Component {
       const errorColor = { background: '#aa1717', text: "#FFFFFF" };
       notify.show('Sorry, an error occured while deploy was triggered', 'custom', 2000, errorColor);
       console.log(error);
-    });
+    })
+    .finally(() => {this.setState({processingDeploy: false})});
   }
 
   transformEntityForPost(state) {
@@ -180,7 +188,7 @@ export default class MainFormComponent extends React.Component {
   }
 
   render() {
-    const {name, version, port, store, entities} = this.state;
+    const {name, version, port, store, entities, processingBuild, processingDeploy} = this.state;
 
     const entityComponents = entities.map((entity, index) => (
       <EntityComponent
@@ -223,7 +231,11 @@ export default class MainFormComponent extends React.Component {
                     value={this.state.version}
                     onChange={(e) => this.handleVersionChange(e)}/>
                 </div>
-                <button type="button" className="btn btn-primary" onClick={(e) => this.handleSubmitClick(e)}>Submit</button>
+                {this.state.processingBuild ? (
+                  <div>Processing...</div>
+                ) : (
+                  <button type="button" className="btn btn-primary" onClick={(e) => this.handleSubmitClick(e)}>Submit</button>
+                )}
               </form>
               </div>
             </div>
@@ -268,7 +280,11 @@ export default class MainFormComponent extends React.Component {
                     value={store.password}
                     onChange={(e) => this.handleDeployParamChange(e, 'storePass')}/>
                 </div>
-                <button type="button" className="btn btn-primary" onClick={(e) => this.handleDeployClick(e)}>Deploy</button>
+                {this.state.processingDeploy ? (
+                  <div>Processing...</div>
+                ) : (
+                  <button type="button" className="btn btn-primary" onClick={(e) => this.handleDeployClick(e)}>Deploy</button>
+                )}
               </div>
             </div>
           </div>
