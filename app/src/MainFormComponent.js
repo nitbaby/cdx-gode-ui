@@ -165,7 +165,8 @@ export default class MainFormComponent extends React.Component {
         window.open('http://localhost:8005/gode/applications', '_blank')
         break;
       case 'docs':
-        window.open('https://usefulangle.com', '_blank')
+        const port = this.state.port;
+        window.open(`http://localhost:${port}/swagger-ui.html`, '_blank')
         break;
       default:
 
